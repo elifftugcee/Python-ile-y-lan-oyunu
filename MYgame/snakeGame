@@ -1,0 +1,151 @@
+import pygame
+import sys
+import random
+
+# Pygame başlat
+pygame.init()
+
+# Ekran boyutları ve renkler
+WIDTH, HEIGHT = 800, 500
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+
+# Ekran oluştur
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Yılan Oyunu")
+
+# Yılanın başlangıç konumu ve hızı
+snake = [(100, 50)]
+snake_speed = 15
+
+# Yiyecek başlangıç konumu
+food = (random.randrange(1, (WIDTH//10)) * 10,
+        random.randrange(1, (HEIGHT//10)) * 10)
+
+# Yılanın hareket yönü
+direction = "RIGHT"
+
+# Skor
+score = 0
+high_score = 0
+
+# Skor yazısı için font
+font = pygame.font.Font(None, 36)
+
+# Oyun durumu
+game_over = False
+
+# Start ve exit düğmelerinin koordinatları ve boyutları
+start_button = pygame.Rect(50, 200, 100, 50)
+exit_button = pygame.Rect(50, 300, 100, 50)
+
+# Start ve exit düğmelerinin metinleri
+start_text = font.render("Başlat", True, BLACK)
+exit_text = font.render("Çıkış", True, BLACK)
+
+# Oyun döngüsü
+while True:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP and direction != "DOWN":
+                direction = "UP"
+            elif event.key == pygame.K_DOWN and direction != "UP":
+                direction = "DOWN"
+            elif event.key == pygame.K_LEFT and direction != "RIGHT":
+                direction = "LEFT"
+            elif event.key == pygame.K_RIGHT and direction != "LEFT":
+                direction = "RIGHT"
+            elif event.key == pygame.K_q:  # "Q" tuşuna basıldığında çık
+                pygame.quit()
+                sys.exit()
+            elif event.key == pygame.K_r:  # "R" tuşuna basıldığında oyunu sıfırla
+                snake = [(100, 50)]
+                snake_speed = 15
+                direction = "RIGHT"
+                score = 0
+                food = (random.randrange(1, (WIDTH//10)) * 10,
+                        random.randrange(1, (HEIGHT//10)) * 10)
+                game_over = False  # Oyunu tekrar başlat
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if start_button.collidepoint(event.pos) and game_over:
+                snake = [(100, 50)]
+                snake_speed = 15
+                direction = "RIGHT"
+                score = 0
+                food = (random.randrange(1, (WIDTH//10)) * 10,
+                        random.randrange(1, (HEIGHT//10)) * 10)
+                game_over = False  # Oyunu tekrar başlat
+            elif exit_button.collidepoint(event.pos):
+                pygame.quit()
+                sys.exit()
+
+    if not game_over:
+        # Yılanın yeni başını hesapla
+        if direction == "UP":
+            new_head = (snake[0][0], snake[0][1] - 10)
+        if direction == "DOWN":
+            new_head = (snake[0][0], snake[0][1] + 10)
+        if direction == "LEFT":
+            new_head = (snake[0][0] - 10, snake[0][1])
+        if direction == "RIGHT":
+            new_head = (snake[0][0] + 10, snake[0][1])
+
+        # Yılanın başının sınırları kontrol et
+        if new_head[0] >= WIDTH or new_head[0] < 0 or \
+           new_head[1] >= HEIGHT or new_head[1] < 0:
+            game_over = True
+
+        # Yılanın kendine çarpıp çarpmadığını kontrol et
+        if new_head in snake[1:]:
+            game_over = True
+
+        # Yılanın yiyecek yemesini kontrol et
+        if new_head == food:
+            score += 1
+            if score > high_score:
+                high_score = score
+            food = (random.randrange(1, (WIDTH//10)) * 10,
+                    random.randrange(1, (HEIGHT//10)) * 10)
+        else:
+            snake.pop()
+
+        snake.insert(0, new_head)
+
+        # Ekranı temizle
+        screen.fill(BLACK)
+
+        # Yılanı ve yiyeceği ekrana çiz
+        for segment in snake:
+            pygame.draw.rect(screen, WHITE, pygame.Rect(segment[0], segment[1], 10, 10))
+        pygame.draw.rect(screen, RED, pygame.Rect(food[0], food[1], 10, 10))
+
+        # Skoru ve en yüksek skoru ekrana yazdır
+        score_text = font.render("Skor: " + str(score), True, WHITE)
+        high_score_text = font.render("En Yüksek Skor: " + str(high_score), True, WHITE)
+        screen.blit(score_text, (10, 10))
+        screen.blit(high_score_text, (10, 50))
+
+        pygame.display.flip()
+
+        # Oyun hızını ayarla
+        pygame.time.Clock().tick(snake_speed)
+    else:
+        # Oyun bittiğinde ekranda "Oyun Bitti" mesajı göster
+        game_over_text = font.render("Oyun Bitti! Yeniden Başlatmak için Başlata tıklayın.", True, WHITE)
+        screen.blit(game_over_text, (WIDTH // 4, HEIGHT // 2))
+        pygame.draw.rect(screen, WHITE, start_button)
+        pygame.draw.rect(screen, WHITE, exit_button)
+        screen.blit(start_text, (60, 210))
+        screen.blit(exit_text, (75, 310))
+        pygame.display.flip()
+
+
+
+
+
+
+
